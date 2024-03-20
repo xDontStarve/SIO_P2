@@ -246,6 +246,66 @@ def save_movies_to_csv(movies, filename='final_titles.csv'):
                  movie.imdb_votes, movie.tmdb_popularity, movie.tmdb_score])
 
 
+def get_unique_ids_from_csv(filename):
+    ids = set()  # Initialize an empty set to store unique ids
+
+    # Get the full path to the CSV file
+    file_path = os.path.join(os.path.dirname(__file__), filename)
+
+    # Read the CSV file
+    with open(file_path, newline='', encoding='utf-8') as csvfile:
+        reader = csv.reader(csvfile)
+        next(reader)  # Skip the header row if it exists
+        for row in reader:
+            ids.add(row[0])  # Add the id from each row to the set
+
+    return ids
+
+
+def create_provider_titles_csv(provider, providerId, titles_set):
+    file_name = f"provider_{provider}_titles.csv"
+
+    # Write to the CSV file
+    with open(file_name, mode='w', newline='', encoding='utf-8') as csvfile:
+        writer = csv.writer(csvfile)
+
+        # Write the data rows
+        for title_id in titles_set:
+            id_value = f"{providerId}_{title_id}"
+            writer.writerow([id_value, title_id, providerId])
+
+
+def merge_provider_csv_files():
+    # Define the output filename
+    output_filename = "final_provider_movie.csv"
+
+    # Get the list of files in the directory
+    files = os.listdir()
+
+    # Filter files with the "provider_" prefix
+    provider_files = [file for file in files if file.startswith("provider_")]
+
+    # Create an empty list to store all data rows
+    all_rows = []
+
+    # Iterate over each provider file
+    for file in provider_files:
+        with open(file, mode='r', newline='', encoding='utf-8') as csvfile:
+            reader = csv.reader(csvfile)
+            next(reader)  # Skip the header row
+            for row in reader:
+                all_rows.append(row)
+
+    # Write all data to the output file
+    with open(output_filename, mode='w', newline='', encoding='utf-8') as csvfile:
+        writer = csv.writer(csvfile)
+
+        # Write the header row
+        writer.writerow(['id', 'title_id', 'provider_id'])
+
+        # Write all data rows
+        writer.writerows(all_rows)
+
 if __name__ == "__main__":
     script_directory = os.path.dirname(os.path.abspath(__file__))
     prefix_to_match = "sanitized_"
@@ -272,3 +332,29 @@ if __name__ == "__main__":
     prefix_to_match = "sanitized"
     delete_files_with_prefix(script_directory, prefix_to_match)
 
+    # get provider_movie table
+    title_set = get_unique_ids_from_csv("Amazon_Prime_Titles.csv")
+    create_provider_titles_csv("Amazon_Prime", 1, title_set)
+
+    title_set = get_unique_ids_from_csv("HBOMax_Titles.csv")
+    create_provider_titles_csv("hbo_max", 2, title_set)
+
+    title_set = get_unique_ids_from_csv("Disney_Plus_Titles.csv")
+    create_provider_titles_csv("disney_plus", 3, title_set)
+
+    title_set = get_unique_ids_from_csv("HuluTV_Titles.csv")
+    create_provider_titles_csv("hulutv", 4, title_set)
+
+    title_set = get_unique_ids_from_csv("Netflix_Titles.csv")
+    create_provider_titles_csv("netflix", 5, title_set)
+
+    title_set = get_unique_ids_from_csv("ParamountTV_Titles.csv")
+    create_provider_titles_csv("paramountTV", 6, title_set)
+
+    title_set = get_unique_ids_from_csv("Rakuten_Viki_Titles.csv")
+    create_provider_titles_csv("rakuten", 7, title_set)
+
+    merge_provider_csv_files()
+
+    prefix_to_match = "provider_"
+    delete_files_with_prefix(script_directory, prefix_to_match)
